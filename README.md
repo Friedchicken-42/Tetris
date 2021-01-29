@@ -12,6 +12,7 @@ A highly customizable tetris game featuring:
 ## Work in progress
 - [ ] function docstring
 - [ ] options
-- [ ] point counter
+- [ ] points counter
 - [ ] pieces queue
+
 and extra stuff
