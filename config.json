@@ -1,0 +1,21 @@
+{
+    "core": {
+        "width": 10,
+        "height": 20,
+        "filename": "pieces.json"
+    },
+    "commands": {
+        "q": "quit",
+        "escape": "pause",
+        "r": "retry",
+        "left": "left",
+        "right": "right",
+        "down": "down",
+        "x": "cw",
+        "z": "ccw",
+        "a": "cw2x",
+        "s": "ccw2x",
+        "left shift": "hold",
+        "space": "harddrop"
+    }
+}
