@@ -1,5 +1,5 @@
 from core import Core
-from game_input import Button, InputBox, BoxManager
+from renderable import Button, InputBox, BoxManager, RenderQueue
 import pygame
 import json
 
@@ -18,11 +18,15 @@ class Game:
         pygame.time.set_timer(self.move_down, 400)
 
         self.screen = screen
-        self.off_width = (screen.get_width() -
-                          self.core.width * self.size) // 2
+
         self.offset = (
             (screen.get_width() - self.core.width * self.size) // 2,
             (screen.get_height() - self.core.height * self.size) // 2
+        )
+
+        self.queue = RenderQueue(
+            self.core.queue, self.size,
+            (self.offset[0] + self.core.width * self.size + 10, 100)
         )
 
         self.playfield = pygame.Surface(
@@ -84,7 +88,7 @@ class Game:
         elif event.type == pygame.MOUSEBUTTONDOWN and self.pause:
             self.box_manager.set_selected(event)
 
-        elif event.type == self.move_down and self.pause == False:
+        elif event.type == self.move_down and (self.pause == False and self.core.end == False):
             self.core.move(0, self.input_offset.get_value())
 
         if not self.pause:
@@ -102,9 +106,8 @@ class Game:
             screen.blit(text, text_rect)
 
         self.screen.fill((0, 0, 0))
-        self.input_offset.render(self.screen)
-        self.input_angle.render(self.screen)
-        self.input_threshold.render(self.screen)
+        self.box_manager.render(self.screen)
+        self.queue.render(self.screen)
 
         board = self.core.merge(self.core.mino)
         if board is None:

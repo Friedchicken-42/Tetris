@@ -100,3 +100,39 @@ class BoxManager:
             self.delete()
         else:
             self.selected.value += char
+
+    def render(self, screen):
+        for b in self.boxes:
+            b.render(screen)
+
+
+class RenderQueue:
+    def __init__(self, queue: List, size: int, offset: Coord):
+        self.queue = queue
+        self.offset = offset
+        self.lenght = 5
+        self.size = size / 2
+        self.box_size = self.size * 4
+        self.boxes = [
+            pygame.Surface((self.box_size, self.box_size))
+            for _ in range(self.lenght)
+        ]
+
+    def render(self, screen):
+        for i, mino in enumerate(self.queue[:self.lenght]):
+            position = [
+                self.offset[0],
+                self.offset[1] + i * (self.box_size + 1)
+            ]
+
+            self.boxes[i].fill((20, 20, 20))
+
+            for block in mino.blocks:
+                pygame.draw.polygon(
+                    self.boxes[i],
+                    mino.color,
+                    [(i * self.size, j * self.size)
+                     for i, j in block.exterior.coords]
+                )
+
+            screen.blit(self.boxes[i], position)
