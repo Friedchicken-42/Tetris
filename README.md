@@ -6,6 +6,8 @@ A highly customizable tetris game featuring:
 - custom rotation
 - custom pieces
 
+![](https://i.imgur.com/h7t4dfs.gif)
+
 ## Quickstart
 
 1. Download requirements
