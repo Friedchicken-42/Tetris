@@ -1,5 +1,5 @@
 from core import Core
-from renderable import Button, InputBox, BoxManager, RenderQueue
+from renderable import Button, InputBox, BoxManager, RenderQueue, LineStatus
 import pygame
 import json
 
@@ -29,6 +29,12 @@ class Game:
             (self.offset[0] + self.core.width * self.size + 10, 100)
         )
 
+        self.linestatus = LineStatus(
+            self.core.board,
+            self.size,
+            (self.offset[0] - self.size - 10, self.offset[1])
+        )
+
         self.playfield = pygame.Surface(
             (self.core.width*self.size, self.core.height*self.size), pygame.SRCALPHA)
 
@@ -37,7 +43,7 @@ class Game:
         self.input_offset = InputBox('offset', (150, 200), 150, 50, 1, float)
         self.input_angle = InputBox('angle', (150, 300), 150, 50, 90, float)
         self.input_threshold = InputBox(
-            'threshold', (150, 400), 150, 50, 1, float)
+            'threshold', (150, 400), 150, 50, 10, float)
         self.box_manager = BoxManager(
             [self.input_offset, self.input_angle, self.input_threshold]
         )
@@ -117,6 +123,8 @@ class Game:
             for cell in row[1:-1]:
                 xy = [(i * self.size, j * self.size) for i, j in cell.xy]
                 pygame.draw.polygon(self.playfield, cell.get_color(), xy)
+
+        self.linestatus.render(self.screen, self.core.board)
 
         self.screen.blit(self.playfield, self.offset)
 

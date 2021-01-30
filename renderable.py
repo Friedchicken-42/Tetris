@@ -70,7 +70,7 @@ class InputBox(Input):
 
     def render(self, screen):
         self.input_box.fill((255, 255, 255))
-        value = self.font.render(str(self.value), False, (0, 0, 0))
+        value = self.font.render(str(self.value), True, (0, 0, 0))
         self.input_box.blit(value, (5, 0))
         self.area.blit(self.input_box, self.box_pos)
 
@@ -106,10 +106,32 @@ class BoxManager:
             b.render(screen)
 
 
+class LineStatus:
+    def __init__(self, board: List, size: int, pos: Coord):
+        self.size = size
+        self.pos = pos
+        self.font = pygame.font.SysFont('Arial', 15)
+        self.weights = [
+            pygame.Surface((size, size)) for _ in board[:-1]
+        ]
+
+    def render(self, screen, board):
+        for i, row in enumerate(board[:-1]):
+            self.weights[i].fill((0, 0, 0))
+            weight = sum([c.area for c in row[1:-1]])
+            text = self.font.render(
+                str(round(weight, 1)), True, (255, 255, 255))
+            self.weights[i].blit(text, (0, 0))
+            screen.blit(
+                self.weights[i],
+                (self.pos[0], self.pos[1] + i * self.size)
+            )
+
+
 class RenderQueue:
-    def __init__(self, queue: List, size: int, offset: Coord):
+    def __init__(self, queue: List, size: int, pos: Coord):
         self.queue = queue
-        self.offset = offset
+        self.pos = pos
         self.lenght = 5
         self.size = size / 2
         self.box_size = self.size * 4
@@ -121,8 +143,8 @@ class RenderQueue:
     def render(self, screen):
         for i, mino in enumerate(self.queue[:self.lenght]):
             position = [
-                self.offset[0],
-                self.offset[1] + i * (self.box_size + 1)
+                self.pos[0],
+                self.pos[1] + i * (self.box_size + 1)
             ]
 
             self.boxes[i].fill((20, 20, 20))

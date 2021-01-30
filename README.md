@@ -21,5 +21,6 @@ A highly customizable tetris game featuring:
 - [ ] points counter
 - [x] pieces queue
 - [ ] DAS and ARR
+- [ ] level and speed
 
 and extra stuff
