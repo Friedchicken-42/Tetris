@@ -99,7 +99,8 @@ class Game:
 
         if not self.pause:
             self.core.threshold = self.input_threshold.get_value()
-            self.core.clear_line()
+            cleared = self.core.clear_line()
+            self.core.calculate_points(cleared)
 
         return 'game'
 
@@ -107,8 +108,7 @@ class Game:
         def render_text(screen, text: str, x: int, y: int):
             text = self.font.render(
                 text, True, (255, 255, 255))
-            text_rect = text.get_rect(
-                center=(self.screen.get_width() // 2, self.screen.get_height()//3))
+            text_rect = text.get_rect(center=(x, y))
             screen.blit(text, text_rect)
 
         self.screen.fill((0, 0, 0))
@@ -127,6 +127,10 @@ class Game:
         self.linestatus.render(self.screen, self.core.board)
 
         self.screen.blit(self.playfield, self.offset)
+
+        render_text(self.screen,
+                    f'{int(self.core.points):0>10}',
+                    self.screen.get_width() // 2, self.offset[1] - self.core.height // 2 - 10)
 
         if self.core.end:
             render_text(self.screen, 'Top out',

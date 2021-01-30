@@ -15,6 +15,7 @@ class Core:
         self.height = height
         self.threshold = 10
         self.end = False
+        self.points = 0
 
         for i in range(height + 1):
             self.board.append([])
@@ -139,8 +140,16 @@ class Core:
                     if k == -1 or k == self.width else Cell(k, 0, 0.0)
                     for k in range(-1, self.width + 1)
                 ]
+                lines_cleared += 1
 
         return lines_cleared
+
+    def calculate_points(self, lines_cleared: int):
+        multiplier = self.threshold * 10
+        if lines_cleared >= 4:
+            self.points += 10 * (lines_cleared - 3) * multiplier
+        else:
+            self.points += lines_cleared * multiplier
 
     def print_board(self):
         string = ''
