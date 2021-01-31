@@ -141,6 +141,75 @@ class Game:
                         self.screen.get_width() // 2, self.screen.get_height()//2)
 
 
+class Option:
+    def __init__(self, screen):
+        self.screen = screen
+
+        with open('config.json') as f:
+            self.data = json.load(f)
+
+        center = (
+            self.screen.get_width() // 2,
+            self.screen.get_height() // 2
+        )
+
+        self.input_width = InputBox(
+            'width', (center[0], 50), 400, 50, self.data['core']['width'], int)
+        self.input_height = InputBox(
+            'height', (center[0], 100), 400, 50, self.data['core']['height'], int)
+        self.input_file = InputBox(
+            'file', (center[0], 150), 400, 50, self.data['core']['filename'], str)
+
+        self.commands = []
+        for i, (key, command) in enumerate(self.data['commands'].items()):
+            if i % 2 == 0:
+                pos = (center[0] - 100, 200 + i // 2 * 50)
+            else:
+                pos = (center[0] + 100, 200 + i // 2 * 50)
+            self.commands.append(InputBox(command, pos, 200, 50, key, str, 1))
+
+        self.box_manager = BoxManager(
+            [self.input_width, self.input_height, self.input_file, *self.commands])
+
+        self.button_confirm = Button(
+            'Confirm', (center[0] - 100, 525), 150, 50, pygame.Color('white'))
+        self.button_back = Button(
+            'Back', (center[0] + 100, 525), 150, 50, pygame.Color('white'))
+
+    def load_config(self):
+        data = {
+            'core': {
+                'width': self.input_width.get_value(),
+                'height': self.input_height.get_value(),
+                'filename': self.input_file.get_value()
+            },
+            'commands': {
+                item.get_value(): item.name for item in self.commands
+            }
+        }
+        with open('config.json', 'w') as f:
+            json.dump(data, f)
+
+    def handle(self, event):
+        if event.type == pygame.KEYDOWN:
+            self.box_manager.add(pygame.key.name(event.key))
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            self.box_manager.set_selected(event)
+
+        if self.button_confirm.ispressed(event):
+            self.load_config()
+            return 'menu'
+        elif self.button_back.ispressed(event):
+            return 'menu'
+        return 'option'
+
+    def render(self):
+        self.screen.fill((0, 0, 0))
+        self.box_manager.render(self.screen)
+        self.button_confirm.render(self.screen)
+        self.button_back.render(self.screen)
+
+
 class Menu:
     def __init__(self, screen):
         self.screen = screen
@@ -151,6 +220,9 @@ class Menu:
         self.button_start = Button(
             'Start', (width / 2, 100), 100, 50, pygame.Color('white')
         )
+        self.button_option = Button(
+            'Option', (width / 2, 200), 100, 50, pygame.Color('white')
+        )
         self.button_exit = Button(
             'Exit', (width / 2, 300), 100, 50, pygame.Color('white')
         )
@@ -158,6 +230,8 @@ class Menu:
     def handle(self, event):
         if self.button_start.ispressed(event):
             return 'game'
+        elif self.button_option.ispressed(event):
+            return 'option'
         elif self.button_exit.ispressed(event):
             return 'quit'
         return 'menu'
@@ -165,6 +239,7 @@ class Menu:
     def render(self):
         self.screen.fill((0, 0, 0))
         self.button_start.render(self.screen)
+        self.button_option.render(self.screen)
         self.button_exit.render(self.screen)
 
 
@@ -193,6 +268,8 @@ class Render:
                     elif next_render == 'retry':
                         current = Game(screen, 20)
                         next_render = 'game'
+                    elif next_render == 'option':
+                        current = Option(screen)
                     elif next_render == 'quit':
                         running = False
                 current_render = next_render

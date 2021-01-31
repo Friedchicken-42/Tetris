@@ -41,10 +41,11 @@ class Button(Input):
 
 
 class InputBox(Input):
-    def __init__(self, name: str, center: Coord, width: int, height: int, value, conversion: type):
+    def __init__(self, name: str, center: Coord, width: int, height: int, value, conversion: type, lenght: int = 0):
         super().__init__(name, center, width, height, (20, 20, 20), (255, 255, 255))
         self.value = str(value)
         self.conversion = conversion
+        self.lenght = lenght
 
         text_pos = (
             10,
@@ -94,7 +95,13 @@ class BoxManager:
             self.selected.value = self.selected.value[:-1]
 
     def add(self, char):
-        if char in {'escape', 'return'}:
+        if self.selected is None:
+            return
+
+        if self.selected.lenght != 0 and len(self.selected.value) >= self.selected.lenght:
+            self.delete()
+
+        if char in {'return'}:
             pass
         elif char == 'backspace':
             self.delete()
