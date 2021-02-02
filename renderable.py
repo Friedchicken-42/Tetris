@@ -143,11 +143,12 @@ class RenderQueue:
         self.size = size / 2
         self.box_size = self.size * 4
         self.boxes = [
-            pygame.Surface((self.box_size, self.box_size))
+            pygame.Surface((self.box_size, self.box_size), pygame.SRCALPHA)
             for _ in range(self.lenght)
         ]
 
     def render(self, screen):
+        '''should use cell & intersection'''
         for i, mino in enumerate(self.queue[:self.lenght]):
             position = [
                 self.pos[0],
@@ -159,9 +160,9 @@ class RenderQueue:
             for block in mino.blocks:
                 pygame.draw.polygon(
                     self.boxes[i],
-                    mino.color,
+                    (*mino.color, block.density * 255),
                     [(i * self.size, j * self.size)
-                     for i, j in block.exterior.coords]
+                     for i, j in block.box.exterior.coords]
                 )
 
             screen.blit(self.boxes[i], position)

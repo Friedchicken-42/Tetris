@@ -10,7 +10,8 @@ class Cell:
         self.color = [20, 20, 20]
 
     def intersect(self, block: box, color: List[int]):
-        x = block.intersection(self.box).area / self.box.area
+        x = block.box.intersection(self.box).area * \
+            block.density / self.box.area
         self.area += round(x, 1)
 
         if self.area != 0:

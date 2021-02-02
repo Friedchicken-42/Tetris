@@ -4,7 +4,6 @@ import json
 import random
 import copy
 from typing import List, Tuple, Union, Any
-Coord = Tuple[int, int]
 
 
 class Core:
@@ -31,7 +30,8 @@ class Core:
     def _load_mino(self, data) -> Mino:
         name: str = data['name']
         color: List[int] = data['color']
-        blocks: List[Coord] = [(i, j) for i, j in data['blocks']]
+        blocks: List[Tuple[int, int, float]] = [
+            (i, j, d) for i, j, d in data['blocks']]
 
         center = data['center'] if 'center' in data else None
 
@@ -57,7 +57,7 @@ class Core:
         return mino
 
     def check(self, block, tmp_board):
-        center = block.centroid
+        center = block.box.centroid
         x, y = int(center.x), int(center.y)
         for i in (-1, 0, 1):
             for j in (-1, 0, 1):
@@ -69,7 +69,7 @@ class Core:
         '''merge current board with mino
         if not return None'''
         def generate_set(block, _max: Tuple[int, int]):
-            center = block.centroid
+            center = block.box.centroid
             x, y = int(center.x), int(center.y)
             s = set()
             for i in (-1, 0, 1):
@@ -161,20 +161,9 @@ class Core:
 
 
 if __name__ == '__main__':
-    x = Core(10, 20, "pieces.json")
+    x = Core(10, 20, "T.json")
     print(x.mino)
     x.move(2, 5.5)
     x.place()
 
-    string = ''
-    for i in x.board:
-        for j in i:
-            string += f'{j.area} '
-        string += '\n'
-    print(string)
-    string = ''
-    for i in x.board:
-        for j in i:
-            string += '[' + ' '.join(f'{k:<3}' for k in j.color) + '] '
-        string += '\n'
-    print(string)
+    x.print_board()
