@@ -8,12 +8,12 @@ Coord = Tuple[int, int]
 
 
 class Core:
-    def __init__(self, width: int, height: int, filename: str, threshold: int = 10):
+    def __init__(self, width: int, height: int, filename: str):
         self.board: List[List[Cell]] = []
         self.filename = filename
         self.width = width
         self.height = height
-        self.threshold = 10
+        self.threshold = 100
         self.end = False
         self.points = 0
 
@@ -128,7 +128,7 @@ class Core:
 
         for i, row in enumerate(self.board[:-1]):
             weight = sum([cell.area for cell in row[1:-1]])
-            if weight >= self.width * self.threshold / 10:
+            if weight >= self.width * self.threshold / 100:
                 while i != 0:
                     self.board[i] = self.board[i - 1]
                     for z in self.board[i]:
@@ -145,7 +145,7 @@ class Core:
         return lines_cleared
 
     def calculate_points(self, lines_cleared: int):
-        multiplier = self.threshold * 10
+        multiplier = self.threshold
         if lines_cleared >= 4:
             self.points += 10 * (lines_cleared - 3) * multiplier
         else:

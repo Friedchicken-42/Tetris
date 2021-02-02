@@ -22,7 +22,7 @@ class Input:
 
 
 class Button(Input):
-    def __init__(self, name: str, center: Coord, width: int, height: int, color: List[int]):
+    def __init__(self, name: str, center: Coord, width: int, height: int, color):
         super().__init__(name, center, width, height, color, (0, 0, 0))
 
         text_pos = (
@@ -64,6 +64,20 @@ class InputBox(Input):
         self.area.blit(self.text, text_pos)
         self.area.blit(self.input_box, self.box_pos)
 
+    def delete(self):
+        if len(self.value) > 0:
+            self.value = self.value[:-1]
+
+    def add(self, char):
+        if char in {'return'}:
+            pass
+        elif char == 'backspace':
+            self.delete()
+        else:
+            if self.lenght != 0 and len(self.value) >= self.lenght:
+                self.delete()
+            self.value += char
+
     def get_value(self):
         if self.value:
             return self.conversion(self.value)
@@ -90,23 +104,9 @@ class BoxManager:
                 self.selected = b
                 b.value = ''
 
-    def delete(self):
-        if len(self.selected.value) > 0:
-            self.selected.value = self.selected.value[:-1]
-
     def add(self, char):
-        if self.selected is None:
-            return
-
-        if self.selected.lenght != 0 and len(self.selected.value) >= self.selected.lenght:
-            self.delete()
-
-        if char in {'return'}:
-            pass
-        elif char == 'backspace':
-            self.delete()
-        else:
-            self.selected.value += char
+        if self.selected:
+            self.selected.add(char)
 
     def render(self, screen):
         for b in self.boxes:
@@ -136,10 +136,10 @@ class LineStatus:
 
 
 class RenderQueue:
-    def __init__(self, queue: List, size: int, pos: Coord):
+    def __init__(self, queue: List, size: int, pos: Coord, lenght: int = 5):
         self.queue = queue
         self.pos = pos
-        self.lenght = 5
+        self.lenght = lenght
         self.size = size / 2
         self.box_size = self.size * 4
         self.boxes = [
