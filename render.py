@@ -3,6 +3,8 @@ from renderable import Button, InputBox, BoxManager, RenderQueue, LineStatus
 import pygame
 import json
 
+white = pygame.Color('white')
+
 
 class Game:
     def __init__(self, screen, size):
@@ -43,7 +45,7 @@ class Game:
         self.input_offset = InputBox('offset', (150, 200), 150, 50, 1, float)
         self.input_angle = InputBox('angle', (150, 300), 150, 50, 90, float)
         self.input_threshold = InputBox(
-            'threshold', (150, 400), 150, 50, 10, float)
+            'threshold', (150, 400), 150, 50, 100, float)
         self.box_manager = BoxManager(
             [self.input_offset, self.input_angle, self.input_threshold]
         )
@@ -172,9 +174,9 @@ class Option:
             [self.input_width, self.input_height, self.input_file, *self.commands])
 
         self.button_confirm = Button(
-            'Confirm', (center[0] - 100, 525), 150, 50, pygame.Color('white'))
+            'Confirm', (center[0] - 100, 525), 150, 50, white)
         self.button_back = Button(
-            'Back', (center[0] + 100, 525), 150, 50, pygame.Color('white'))
+            'Back', (center[0] + 100, 525), 150, 50, white)
 
     def load_config(self):
         data = {
@@ -210,6 +212,76 @@ class Option:
         self.button_back.render(self.screen)
 
 
+class Edit:
+    def __init__(self, screen):
+        self.screen = screen
+
+        width = self.screen.get_width()
+        height = self.screen.get_height()
+
+        self.input_file = InputBox(
+            'filename', (width // 2 - 150, 100), 300, 50, 'pieces.json', str)
+
+        self.button_load = Button(
+            'Load', (width // 2 + 100, 100), 100, 50, white)
+        self.button_new = Button(
+            'New', (width // 2 + 225, 100), 100, 50, white)
+
+        self.input_r = InputBox(
+            'red', (100, height // 2 - 100), 150, 50, 0, int)
+        self.input_g = InputBox(
+            'green', (100, height // 2 - 50), 150, 50, 0, int)
+        self.input_b = InputBox(
+            'blue', (100, height // 2), 150, 50, 0, int)
+        self.input_density = InputBox(
+            'density', (100, height // 2 + 50), 150, 50, 1, float)
+
+        size = 30
+        self.buttons = 6
+        offset = size * self.buttons // 2
+
+        self.button_matrix = [
+            Button('',
+                   (width // 2 - offset + j * size,
+                    height // 2 - offset + i * size),
+                   size, size, (20, 20, 20))
+            for i in range(self.buttons) for j in range(self.buttons)]
+
+        self.button_back = Button('Back', (100, height - 100), 100, 50, white)
+
+        self.box_manager = BoxManager(
+            [self.input_file, self.input_r, self.input_g, self.input_b, self.input_density])
+
+    def handle(self, event):
+        if event.type == pygame.KEYDOWN:
+            self.box_manager.add(pygame.key.name(event.key))
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.button_back.ispressed(event):
+                return 'menu'
+            self.box_manager.set_selected(event)
+            for i, b in enumerate(self.button_matrix):
+                if b.ispressed(event):
+                    color = [
+                        self.input_r.get_value(),
+                        self.input_g.get_value(),
+                        self.input_b.get_value(),
+                        self.input_density.get_value() * 255
+                    ]
+                    print(i // self.buttons, i % self.buttons)
+                    b.set_color(color)
+
+        return 'edit'
+
+    def render(self):
+        self.screen.fill((0, 0, 0))
+        self.box_manager.render(self.screen)
+        self.button_load.render(self.screen)
+        self.button_new.render(self.screen)
+        for b in self.button_matrix:
+            b.render(self.screen)
+        self.button_back.render(self.screen)
+
+
 class Menu:
     def __init__(self, screen):
         self.screen = screen
@@ -218,13 +290,16 @@ class Menu:
         height = screen.get_height()
 
         self.button_start = Button(
-            'Start', (width / 2, 100), 100, 50, pygame.Color('white')
+            'Start', (width / 2, 100), 100, 50, white
         )
         self.button_option = Button(
-            'Option', (width / 2, 200), 100, 50, pygame.Color('white')
+            'Option', (width / 2, 200), 100, 50, white
+        )
+        self.button_edit = Button(
+            'Edit', (width / 2, 300), 100, 50, white
         )
         self.button_exit = Button(
-            'Exit', (width / 2, 300), 100, 50, pygame.Color('white')
+            'Exit', (width / 2, 400), 100, 50, white
         )
 
     def handle(self, event):
@@ -232,6 +307,8 @@ class Menu:
             return 'game'
         elif self.button_option.ispressed(event):
             return 'option'
+        elif self.button_edit.ispressed(event):
+            return 'edit'
         elif self.button_exit.ispressed(event):
             return 'quit'
         return 'menu'
@@ -240,6 +317,7 @@ class Menu:
         self.screen.fill((0, 0, 0))
         self.button_start.render(self.screen)
         self.button_option.render(self.screen)
+        self.button_edit.render(self.screen)
         self.button_exit.render(self.screen)
 
 
@@ -270,6 +348,8 @@ class Render:
                         next_render = 'game'
                     elif next_render == 'option':
                         current = Option(screen)
+                    elif next_render == 'edit':
+                        current = Edit(screen)
                     elif next_render == 'quit':
                         running = False
                 current_render = next_render

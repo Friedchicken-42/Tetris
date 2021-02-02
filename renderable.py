@@ -1,4 +1,5 @@
 import pygame
+from cell import Cell
 from typing import Tuple, List
 Coord = Tuple[int, int]
 
@@ -9,13 +10,18 @@ class Input:
         self.center = center
         self.width = width
         self.height = height
-        self.area = pygame.Surface((width, height))
+        self.area = pygame.Surface((width, height), pygame.SRCALPHA)
         self.area.fill(color)
         self.position = (
             center[0] - width / 2, center[1] - height / 2
         )
         self.font = pygame.font.SysFont('Arial', 20)
+        self.text_color = text_color
         self.text = self.font.render(name, True, text_color)
+
+    def set_color(self, color: List[int]):
+        self.area.fill(color)
+        self.text = self.font.render(self.name, True, self.text_color)
 
     def render(self, screen):
         self.screen_area = screen.blit(self.area, self.position)
@@ -148,7 +154,6 @@ class RenderQueue:
         ]
 
     def render(self, screen):
-        '''should use cell & intersection'''
         for i, mino in enumerate(self.queue[:self.lenght]):
             position = [
                 self.pos[0],
@@ -158,9 +163,11 @@ class RenderQueue:
             self.boxes[i].fill((20, 20, 20))
 
             for block in mino.blocks:
+                color = (20, 20, 20) if block.density == 0 else (
+                    *mino.color, block.density * 255)
                 pygame.draw.polygon(
                     self.boxes[i],
-                    (*mino.color, block.density * 255),
+                    color,
                     [(i * self.size, j * self.size)
                      for i, j in block.box.exterior.coords]
                 )
