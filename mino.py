@@ -10,6 +10,9 @@ class Block:
         self.box = box(minx, miny, maxx, maxy)
         self.density = density
 
+    def __repr__(self):
+        return str(self.box.exterior.coords.xy)
+
 
 class Mino:
     def __init__(self, name: str, coords: List[Tuple[int, int, float]], color: List[int], center: Coord = None):

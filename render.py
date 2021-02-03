@@ -1,4 +1,4 @@
-from core import Core
+from core import Core, load_mino
 from renderable import Button, InputBox, BoxManager, RenderQueue, LineStatus
 import pygame
 import json
@@ -57,7 +57,7 @@ class Game:
             else:
                 command = ''
 
-            if self.pause and self.box_manager.selected:
+            if self.pause and self.box_manager.selected is not None:
                 self.box_manager.add(pygame.key.name(event.key))
                 if command == 'pause':
                     self.pause = False
@@ -94,7 +94,7 @@ class Game:
                 self.pause = True
 
         elif event.type == pygame.MOUSEBUTTONDOWN and self.pause:
-            self.box_manager.set_selected(event)
+            self.box_manager.set_selected()
 
         elif event.type == self.move_down and (self.pause == False and self.core.end == False):
             self.core.move(0, self.input_offset.get_value())
@@ -196,7 +196,7 @@ class Option:
         if event.type == pygame.KEYDOWN:
             self.box_manager.add(pygame.key.name(event.key))
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            self.box_manager.set_selected(event)
+            self.box_manager.set_selected()
 
         if self.button_confirm.ispressed(event):
             self.load_config()
@@ -220,7 +220,8 @@ class Edit:
         height = self.screen.get_height()
 
         self.input_file = InputBox(
-            'filename', (width // 2 - 150, 100), 300, 50, 'pieces.json', str)
+            'filename', (width // 2 - 150, 100), 300, 50, 'pieces', str)
+        self.pieces = []
 
         self.button_load = Button(
             'Load', (width // 2 + 100, 100), 100, 50, white)
@@ -247,18 +248,43 @@ class Edit:
                    size, size, (20, 20, 20))
             for i in range(self.buttons) for j in range(self.buttons)]
 
+        self._load()
+        self.queue = RenderQueue(
+            self.pieces, 20, (width // 2 + 150, 150), len(self.pieces))
+
         self.button_back = Button('Back', (100, height - 100), 100, 50, white)
+        self.button_confirm = Button(
+            'Confirm', (250, height - 100), 100, 50, white)
+        self.button_add = Button(
+            'Add', (width - 100, height - 100), 100, 50, white)
 
         self.box_manager = BoxManager(
             [self.input_file, self.input_r, self.input_g, self.input_b, self.input_density])
+
+    def _load(self):
+        try:
+            with open(self.input_file.get_value() + '.json', 'r') as f:
+                data = json.load(f)
+
+            self.pieces = [load_mino(m) for m in data]
+        except FileNotFoundError:
+            pass
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             self.box_manager.add(pygame.key.name(event.key))
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            self.box_manager.set_selected()
+            if self.queue.set_selected():
+                mino = self.pieces[self.queue.selected]
+                print(mino.blocks)
+
             if self.button_back.ispressed(event):
                 return 'menu'
-            self.box_manager.set_selected(event)
+            elif self.button_load.ispressed(event):
+                self._load()
+                self.queue.queue = self.pieces
+                self.queue.lenght = len(self.pieces)
             for i, b in enumerate(self.button_matrix):
                 if b.ispressed(event):
                     color = [
@@ -280,6 +306,9 @@ class Edit:
         for b in self.button_matrix:
             b.render(self.screen)
         self.button_back.render(self.screen)
+        self.button_confirm.render(self.screen)
+        self.button_add.render(self.screen)
+        self.queue.render(self.screen)
 
 
 class Menu:

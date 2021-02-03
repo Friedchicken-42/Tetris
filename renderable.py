@@ -103,16 +103,18 @@ class BoxManager:
         self.boxes = input_boxes
         self.selected = None
 
-    def set_selected(self, event):
+    def set_selected(self):
         self.selected = None
-        for b in self.boxes:
+        for i, b in enumerate(self.boxes):
             if b.screen_area.collidepoint(pygame.mouse.get_pos()):
-                self.selected = b
+                self.selected = i
                 b.value = ''
+                return True
+        return False
 
     def add(self, char):
-        if self.selected:
-            self.selected.add(char)
+        if self.selected is not None:
+            self.boxes[self.selected].add(char)
 
     def render(self, screen):
         for b in self.boxes:
@@ -141,6 +143,29 @@ class LineStatus:
             )
 
 
+class BoxQueue:
+    def __init__(self, box_size: int, size: int, pos: Coord):
+        self.box_size = box_size
+        self.size = size
+        self.pos = pos
+        self.box = pygame.Surface(
+            (self.box_size, self.box_size), pygame.SRCALPHA)
+        self.screen_area = None
+
+    def render(self, screen, mino):
+        self.box.fill((20, 20, 20))
+        for block in mino.blocks:
+            color = (20, 20, 20) if block.density == 0 else \
+                (*mino.color, block.density * 255)
+            pygame.draw.polygon(
+                self.box,
+                color,
+                [(i * self.size, j * self.size)
+                 for i, j in block.box.exterior.coords]
+            )
+        self.screen_area = screen.blit(self.box, self.pos)
+
+
 class RenderQueue:
     def __init__(self, queue: List, size: int, pos: Coord, lenght: int = 5):
         self.queue = queue
@@ -149,27 +174,19 @@ class RenderQueue:
         self.size = size / 2
         self.box_size = self.size * 4
         self.boxes = [
-            pygame.Surface((self.box_size, self.box_size), pygame.SRCALPHA)
-            for _ in range(self.lenght)
+            BoxQueue(self.box_size, self.size,
+                     (self.pos[0], self.pos[1] + i * (self.box_size + 1)))
+            for i in range(self.lenght)
         ]
+        self.selected = None
+
+    def set_selected(self):
+        for i, b in enumerate(self.boxes):
+            if b.screen_area.collidepoint(pygame.mouse.get_pos()):
+                self.selected = i
+                return True
+        return False
 
     def render(self, screen):
         for i, mino in enumerate(self.queue[:self.lenght]):
-            position = [
-                self.pos[0],
-                self.pos[1] + i * (self.box_size + 1)
-            ]
-
-            self.boxes[i].fill((20, 20, 20))
-
-            for block in mino.blocks:
-                color = (20, 20, 20) if block.density == 0 else (
-                    *mino.color, block.density * 255)
-                pygame.draw.polygon(
-                    self.boxes[i],
-                    color,
-                    [(i * self.size, j * self.size)
-                     for i, j in block.box.exterior.coords]
-                )
-
-            screen.blit(self.boxes[i], position)
+            self.boxes[i].render(screen, mino)

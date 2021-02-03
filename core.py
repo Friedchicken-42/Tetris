@@ -6,6 +6,17 @@ import copy
 from typing import List, Tuple, Union, Any
 
 
+def load_mino(data) -> Mino:
+    name: str = data['name']
+    color: List[int] = data['color']
+    blocks: List[Tuple[int, int, float]] = [
+        (i, j, d) for i, j, d in data['blocks']]
+
+    center = data['center'] if 'center' in data else None
+
+    return Mino(name, blocks, color, center)
+
+
 class Core:
     def __init__(self, width: int, height: int, filename: str):
         self.board: List[List[Cell]] = []
@@ -27,22 +38,12 @@ class Core:
         self.queue = self.new_bag()
         self.mino: Mino = self.new_mino()
 
-    def _load_mino(self, data) -> Mino:
-        name: str = data['name']
-        color: List[int] = data['color']
-        blocks: List[Tuple[int, int, float]] = [
-            (i, j, d) for i, j, d in data['blocks']]
-
-        center = data['center'] if 'center' in data else None
-
-        return Mino(name, blocks, color, center)
-
     def new_bag(self) -> List[Mino]:
         minos = []
         with open(self.filename) as f:
             data = json.load(f)
             for m in data:
-                mino = self._load_mino(m)
+                mino = load_mino(m)
                 minos.append(mino)
 
         random.shuffle(minos)
