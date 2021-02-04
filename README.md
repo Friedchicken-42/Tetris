@@ -20,7 +20,7 @@ A highly customizable tetris game featuring:
 - [x] options
 - [x] points counter
 - [x] pieces queue
-- [ ] DAS and ARR
+- [x] DAS and ARR
 - [ ] level and speed
 - [ ] edit pieces
 

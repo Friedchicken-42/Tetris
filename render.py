@@ -16,7 +16,14 @@ class Game:
         self.size = size
         self.pause = False
 
+        self.arr = 3
+        self.das = 10
+        self.currend_arr = 0
+        self.current_das = 0
+
         self.move_down = pygame.USEREVENT + 1
+        self.arr_event = pygame.event.Event(pygame.USEREVENT, arrt1='arr')
+        self.x = 0
         pygame.time.set_timer(self.move_down, 400)
 
         self.screen = screen
@@ -49,14 +56,21 @@ class Game:
         self.box_manager = BoxManager(
             [self.input_offset, self.input_angle, self.input_threshold]
         )
+        self.movement = ''
 
     def handle(self, event):
-        if event.type == pygame.KEYDOWN:
-            if pygame.key.name(event.key) in self.commands:
-                command = self.commands[pygame.key.name(event.key)]
-            else:
-                command = ''
-
+        if 'key' in dir(event) and pygame.key.name(event.key) in self.commands:
+            command = self.commands[pygame.key.name(event.key)]
+        else:
+            command = ''
+        if event.type == pygame.KEYUP:
+            if command == 'left':
+                self.movement = ''
+                self.current_das = 0
+            elif command == 'right':
+                self.movement = ''
+                self.current_das = 0
+        elif event.type == pygame.KEYDOWN:
             if self.pause and self.box_manager.selected is not None:
                 self.box_manager.add(pygame.key.name(event.key))
                 if command == 'pause':
@@ -75,9 +89,13 @@ class Game:
                 return 'game'
 
             if command == 'left':
+                self.movement = 'left'
                 self.core.move(-self.input_offset.get_value(), 0)
+                self.current_das = True
             elif command == 'right':
+                self.movement = 'right'
                 self.core.move(self.input_offset.get_value(), 0)
+                self.current_das = True
             elif command == 'down':
                 self.core.move(0, self.input_offset.get_value())
             elif command == 'cw':
@@ -93,6 +111,11 @@ class Game:
             elif command == 'pause':
                 self.pause = True
 
+        elif event == self.arr_event:
+            if self.movement == 'left':
+                self.core.move(-self.input_offset.get_value(), 0)
+            elif self.movement == 'right':
+                self.core.move(self.input_offset.get_value(), 0)
         elif event.type == pygame.MOUSEBUTTONDOWN and self.pause:
             self.box_manager.set_selected()
 
@@ -116,6 +139,14 @@ class Game:
         self.screen.fill((0, 0, 0))
         self.box_manager.render(self.screen)
         self.queue.render(self.screen)
+
+        if self.current_das:
+            self.current_das += 1
+        if self.current_das > self.das:
+            self.currend_arr += 1
+        if self.currend_arr > self.arr:
+            self.currend_arr = 0
+            pygame.event.post(self.arr_event)
 
         board = self.core.merge(self.core.mino)
         if board is None:
@@ -386,7 +417,7 @@ class Render:
             current.render()
 
             pygame.display.update()
-            self.clock.tick(60)
+            self.clock.tick(30)
 
 
 if __name__ == '__main__':
