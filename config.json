@@ -17,5 +17,8 @@
         "s": "ccw2x",
         "left shift": "hold",
         "space": "harddrop"
+    },
+    "extra": {
+        "line status": 1
     }
 }

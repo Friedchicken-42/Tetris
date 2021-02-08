@@ -12,6 +12,8 @@ class Game:
             self.data = json.load(f)
 
         self.commands = self.data['commands']
+        self.extra = self.data['extra']
+        print(self.extra)
         self.core = Core(**self.data['core'])
         self.size = size
         self.pause = False
@@ -37,12 +39,12 @@ class Game:
             self.core.queue, self.size,
             (self.offset[0] + self.core.width * self.size + 10, 100)
         )
-
-        self.linestatus = LineStatus(
-            self.core.board,
-            self.size,
-            (self.offset[0] - self.size - 10, self.offset[1])
-        )
+        if self.extra['line status']:
+            self.linestatus = LineStatus(
+                self.core.board,
+                self.size,
+                (self.offset[0] - self.size - 10, self.offset[1])
+            )
 
         self.playfield = pygame.Surface(
             (self.core.width*self.size, self.core.height*self.size), pygame.SRCALPHA)
@@ -157,7 +159,8 @@ class Game:
                 xy = [(i * self.size, j * self.size) for i, j in cell.xy]
                 pygame.draw.polygon(self.playfield, cell.get_color(), xy)
 
-        self.linestatus.render(self.screen, self.core.board)
+        if self.extra['line status']:
+            self.linestatus.render(self.screen, self.core.board)
 
         self.screen.blit(self.playfield, self.offset)
 
@@ -200,14 +203,25 @@ class Option:
             else:
                 pos = (center[0] + 100, 200 + i // 2 * 50)
             self.commands.append(InputBox(command, pos, 200, 50, key, str, 1))
+            height = 200 + i // 2 * 50 + 50
+
+        self.extra = []
+        for i, (key, value) in enumerate(self.data['extra'].items()):
+            if i % 2 == 0:
+                pos = (center[0] - 100, height + i // 2 * 50)
+            else:
+                pos = (center[0] + 100, height + i // 2 * 50)
+            self.extra.append(
+                InputBox(str(key), pos, 200, 50, str(value), int, 1))
+            height = height + i // 2 * 50 + 50
 
         self.box_manager = BoxManager(
-            [self.input_width, self.input_height, self.input_file, *self.commands])
+            [self.input_width, self.input_height, self.input_file, *self.commands, *self.extra])
 
         self.button_confirm = Button(
-            'Confirm', (center[0] - 100, 525), 150, 50, white)
+            'Confirm', (center[0] - 100, height), 150, 50, white)
         self.button_back = Button(
-            'Back', (center[0] + 100, 525), 150, 50, white)
+            'Back', (center[0] + 100, height), 150, 50, white)
 
     def load_config(self):
         data = {
@@ -218,6 +232,9 @@ class Option:
             },
             'commands': {
                 item.get_value(): item.name for item in self.commands
+            },
+            'extra': {
+                item.name: item.get_value() for item in self.extra
             }
         }
         with open('config.json', 'w') as f:
