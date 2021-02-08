@@ -85,9 +85,10 @@ class InputBox(Input):
             self.value += char
 
     def get_value(self):
-        if self.value:
+        try:
             return self.conversion(self.value)
-        return 0
+        except ValueError:
+            return 0
 
     def render(self, screen):
         self.input_box.fill((255, 255, 255))
@@ -186,6 +187,14 @@ class RenderQueue:
                 self.selected = i
                 return True
         return False
+
+    def set_lenght(self, lenght: int):
+        self.lenght = lenght
+        self.boxes = [
+            BoxQueue(self.box_size, self.size,
+                     (self.pos[0], self.pos[1] + i * (self.box_size + 1)))
+            for i in range(self.lenght)
+        ]
 
     def render(self, screen):
         for i, mino in enumerate(self.queue[:self.lenght]):

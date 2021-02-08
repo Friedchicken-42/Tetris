@@ -22,6 +22,7 @@ A highly customizable tetris game featuring:
 - [x] pieces queue
 - [x] DAS and ARR
 - [ ] level and speed
-- [ ] edit pieces
+- [x] edit pieces
+- [ ] rework edit
 
 and extra stuff

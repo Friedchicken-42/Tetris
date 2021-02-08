@@ -267,17 +267,22 @@ class Edit:
             'blue', (100, height // 2), 150, 50, 0, int)
         self.input_density = InputBox(
             'density', (100, height // 2 + 50), 150, 50, 1, float)
+        self.input_name = InputBox(
+            'name', (100, height // 2 + 100), 150, 50, '', str)
 
         size = 30
         self.buttons = 6
         offset = size * self.buttons // 2
 
-        self.button_matrix = [
+        self.button_matrix = [[
             Button('',
                    (width // 2 - offset + j * size,
                     height // 2 - offset + i * size),
                    size, size, (20, 20, 20))
-            for i in range(self.buttons) for j in range(self.buttons)]
+            for i in range(self.buttons)] for j in range(self.buttons)]
+
+        self.density_matrix = [
+            [0 for _ in range(self.buttons)] for _ in range(self.buttons)]
 
         self._load()
         self.queue = RenderQueue(
@@ -288,18 +293,20 @@ class Edit:
             'Confirm', (250, height - 100), 100, 50, white)
         self.button_add = Button(
             'Add', (width - 100, height - 100), 100, 50, white)
+        self.button_save = Button(
+            'Save', (width - 250, height - 100), 100, 50, white)
 
         self.box_manager = BoxManager(
-            [self.input_file, self.input_r, self.input_g, self.input_b, self.input_density])
+            [self.input_file, self.input_r, self.input_g, self.input_b, self.input_density, self.input_name])
 
     def _load(self):
         try:
             with open(self.input_file.get_value() + '.json', 'r') as f:
-                data = json.load(f)
+                self.data = json.load(f)
 
-            self.pieces = [load_mino(m) for m in data]
+            self.pieces = [load_mino(m) for m in self.data]
         except FileNotFoundError:
-            pass
+            self.pieces = []
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
@@ -307,8 +314,15 @@ class Edit:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             self.box_manager.set_selected()
             if self.queue.set_selected():
-                mino = self.pieces[self.queue.selected]
-                print(mino.blocks)
+                self.density_matrix = [
+                    [0 for _ in range(self.buttons)] for _ in range(self.buttons)]
+                mino = self.data[self.queue.selected]
+                self.input_r.value = mino['color'][0]
+                self.input_g.value = mino['color'][1]
+                self.input_b.value = mino['color'][2]
+                for i, j, d in mino['blocks']:
+                    self.density_matrix[i][j] = d
+                self.input_name.value = mino['name']
 
             if self.button_back.ispressed(event):
                 return 'menu'
@@ -316,16 +330,39 @@ class Edit:
                 self._load()
                 self.queue.queue = self.pieces
                 self.queue.lenght = len(self.pieces)
-            for i, b in enumerate(self.button_matrix):
-                if b.ispressed(event):
-                    color = [
-                        self.input_r.get_value(),
-                        self.input_g.get_value(),
-                        self.input_b.get_value(),
-                        self.input_density.get_value() * 255
-                    ]
-                    print(i // self.buttons, i % self.buttons)
-                    b.set_color(color)
+            elif self.button_save.ispressed(event):
+                new = {
+                    'name': self.input_name.get_value(),
+                    'color': [
+                        min(self.input_r.get_value(), 255),
+                        min(self.input_g.get_value(), 255),
+                        min(self.input_b.get_value(), 255)
+                    ],
+                    'blocks': [(i, j, d) for i, row in enumerate(self.density_matrix) for j, d in enumerate(row) if d != 0]
+                }
+                self.data[self.queue.selected] = new
+                self.pieces[self.queue.selected] = load_mino(new)
+                self.queue.queue = self.pieces
+            elif self.button_confirm.ispressed(event):
+                with open(self.input_file.get_value() + '.json', 'w') as f:
+                    json.dump(self.data, f)
+            elif self.button_add.ispressed(event):
+                self.queue.set_lenght(self.queue.lenght + 1)
+                empty = {'name': '', 'color': [0, 0, 0], 'blocks': []}
+                self.data.append(empty)
+                self.pieces.append(load_mino(empty))
+                self.queue.queue = self.pieces
+            elif self.button_new.ispressed(event):
+                self.input_file.value = ''
+                self.queue.queue = []
+                self.data = []
+                self.pieces = []
+                self.queue.set_lenght(0)
+            for i, row in enumerate(self.button_matrix):
+                for j, b in enumerate(row):
+                    if b.ispressed(event):
+                        self.density_matrix[i][j] = \
+                            self.input_density.get_value()
 
         return 'edit'
 
@@ -334,11 +371,23 @@ class Edit:
         self.box_manager.render(self.screen)
         self.button_load.render(self.screen)
         self.button_new.render(self.screen)
-        for b in self.button_matrix:
-            b.render(self.screen)
+        for i, row in enumerate(self.density_matrix):
+            for j, density in enumerate(row):
+                if density == 0:
+                    color = [20, 20, 20]
+                else:
+                    color = [
+                        min(self.input_r.get_value(), 255),
+                        min(self.input_g.get_value(), 255),
+                        min(self.input_b.get_value(), 255),
+                        min(density * 255, 255)
+                    ]
+                self.button_matrix[i][j].set_color(color)
+                self.button_matrix[i][j].render(self.screen)
         self.button_back.render(self.screen)
         self.button_confirm.render(self.screen)
         self.button_add.render(self.screen)
+        self.button_save.render(self.screen)
         self.queue.render(self.screen)
 
 
