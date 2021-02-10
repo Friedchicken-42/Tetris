@@ -100,6 +100,8 @@ class Core:
             self.board = board
         else:
             self.end = True
+        lines = self.clear_line()
+        self.calculate_points(lines)
         self.mino = self.new_mino()
 
     def move(self, xoff: int, yoff: int):
