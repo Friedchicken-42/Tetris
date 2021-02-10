@@ -126,8 +126,6 @@ class Game:
 
         if not self.pause:
             self.core.threshold = self.input_threshold.get_value()
-            cleared = self.core.clear_line()
-            self.core.calculate_points(cleared)
 
         return 'game'
 
